@@ -1,6 +1,7 @@
 package analysis;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import dto.BSDTOGFFEntry;
 import dto.BSDTOGFFEntryIntron;
@@ -117,5 +118,19 @@ public class BSIntronAnalysis {
 			positionsToReject += (Integer.valueOf(pos.split(";")[1])-1) - Integer.valueOf(pos.split(";")[0]);
 		}
 		return positionsToReject;
+	}
+	
+	public static HashMap<Integer, Integer> getCountOfIntronLengths(ArrayList<BSDTOGFFEntry> gffEntries) {
+		HashMap<Integer, Integer> lengthMap = new HashMap<>();
+		for (BSDTOGFFEntry entry : gffEntries) {
+			int length = entry.getEnd()-entry.getStart();
+			if (lengthMap.containsKey(length)) {
+				lengthMap.put(length, (lengthMap.get(length)+1));
+			} else {
+				lengthMap.put(length, 1);
+			}
+		}
+		return lengthMap;
+		
 	}
 }

@@ -250,7 +250,11 @@ public class BSGFFTReader {
 				continue;
 			}
 			BSDTOGFFEntry intron = calculateIntron(geneid, geneStart, geneEnd, exonList.get(i-1), exonList.get(i));
-			intronList.add(intron);
+			if (intron.getStart() >= intron.getEnd()) {
+				continue;
+			} else {
+				intronList.add(intron);
+			}
 		}
 		return intronList;
 	}

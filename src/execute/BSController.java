@@ -167,7 +167,8 @@ public class BSController {
 	}
 	
 	public boolean analyseIntronLengths(String outPath) {
-		return BSFileWriter.printIntronLengths(gffEntries, outPath+pathEnding);
+		return BSFileWriter.printCountOfIntronLengths(BSIntronAnalysis.getCountOfIntronLengths(gffEntries), outPath+"counts"+pathEnding);
+//		return BSFileWriter.printIntronLengths(gffEntries, outPath+pathEnding);
 	}
 
 	public void analyseLogos(int logoMode, int logolength, String outRawLogoPath, String outPercLogoPath, boolean consoleLog) {

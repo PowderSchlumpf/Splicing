@@ -125,6 +125,31 @@ public class BSFileWriter {
 		return success;
 	}
 	
+	public static boolean printCountOfIntronLengths(HashMap<Integer, Integer> intronLengthsMap, String path) {
+		boolean success = false;
+		FileWriter fw = null;
+		try {
+			fw = new FileWriter(new File(path));
+			fw.append("#length\tcount of length\n");
+			for (Integer length : intronLengthsMap.keySet()) {
+				fw.append(length + "\t" + intronLengthsMap.get(length) + "\n");
+			}
+			success = true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				fw.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return success;
+	}
+	
 	public static boolean printIntronLengths(ArrayList<BSDTOGFFEntry> gffEntries, String path) {
 		boolean success = false;
 		FileWriter fw = null;
@@ -139,9 +164,6 @@ public class BSFileWriter {
 				if (i == gffEntries.size()-1) {
 					fw.append("\n");
 				}
-			}
-			for (BSDTOGFFEntry intron : gffEntries) {
-				fw.append((intron.getEnd()-intron.getStart())+";");
 			}
 			success = true;
 		} catch (IOException e) {
