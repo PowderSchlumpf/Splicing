@@ -391,7 +391,7 @@ public class BSController {
 	
 	public void analyseClusteredSpliceSitesThreePrimeSpecializedPositions(ArrayList<Integer> positions, int posBefore, int posAfter, String outPath) {
 		HashMap<String, Integer> clusterThreePrime = new HashMap<>();
-		ArrayList<Integer> positionsOfInterest = BSUtils.sortAndPreparePositions(positions, positionsBefore, logoLength);
+		ArrayList<Integer> positionsOfInterest = BSUtils.sortAndPreparePositions((positions != null ? positions : new ArrayList<Integer>()), positionsBefore, logoLength);
 		ArrayList<String> ssList = new ArrayList<>();
 		int startPos = -1;
 		int endPos = -1;

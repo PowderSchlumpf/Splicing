@@ -1,10 +1,16 @@
 package gui.panels;
 
+import gui.BSMainWindow;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.FeatureDescriptor;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -12,6 +18,7 @@ import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JWindow;
 
 import utils.BSUserSettings;
 import analysis.BSSequenceLogoGenerator;
@@ -21,10 +28,15 @@ import com.jgoodies.forms.layout.FormLayout;
 
 public class BSInputPanel extends JPanel implements ActionListener {
 	
+	private BSMainWindow parent;
+	
 	private JTextField gffInput;
+	private JButton gffFileChooser;
 	private JTextArea gffQueries;
 	private JTextField fastaInput;
+	private JButton fastaFileChooser;
 	private JTextField destination;
+	private JButton destFileChooser;
 	
 	private JCheckBox chbxFivePrime;
 	private JCheckBox chbxThreePrime;
@@ -35,21 +47,31 @@ public class BSInputPanel extends JPanel implements ActionListener {
 	private JSpinner threePrimePosAfter;
 	
 	private JButton submit;
-	private final String cmd_submit = "cmd_submit"; 
-	public BSInputPanel() {
+	private final String cmd_submit = "cmd_submit";
+	private final String cmd_chooseFile = "cmd_choose";
+	public BSInputPanel(BSMainWindow parent) {
+		this.parent = parent;
 		initGui();
 	}
 	
 	private void initGui() {
-		FormLayout layout = new FormLayout("5dlu,right:pref,5dlu,left:pref,5dlu,right:pref,5dlu,left:pref:grow,5dlu",
+		FormLayout layout = new FormLayout("5dlu,right:pref,5dlu,left:pref,2dlu,left:pref,5dlu,right:pref,5dlu,left:pref:grow,5dlu",
 				"3dlu,top:pref,3dlu,top:pref:grow,5dlu,pref,3dlu,pref,3dlu,pref,5dlu,pref,3dlu,pref,3dlu,pref,3dlu,pref,3dlu");
 		setLayout(layout);
 		CellConstraints cc = new CellConstraints();
 		
 		gffInput = new JTextField(10);
+		gffFileChooser = new JButton("...");
+		gffFileChooser.setName("gff");
+		gffFileChooser.setActionCommand(cmd_chooseFile);
+		gffFileChooser.addActionListener(this);
 		gffQueries = new JTextArea(5, 10);
 		gffQueries.setBorder(gffInput.getBorder());
 		fastaInput = new JTextField(10);
+		fastaFileChooser = new JButton("...");
+		fastaFileChooser.setName("fasta");
+		fastaFileChooser.setActionCommand(cmd_chooseFile);
+		fastaFileChooser.addActionListener(this);
 		
 		chbxFivePrime = new JCheckBox("5' Analysis");
 		chbxThreePrime = new JCheckBox("3' Analysis");
@@ -64,18 +86,24 @@ public class BSInputPanel extends JPanel implements ActionListener {
 		threePrimePosAfter.setValue(10);
 		
 		destination = new JTextField(10);
+		destFileChooser = new JButton("...");
+		destFileChooser.setName("destination");
+		destFileChooser.setActionCommand(cmd_chooseFile);
+		destFileChooser.addActionListener(this);
 		
-		submit = new JButton("Submit");
+		submit = new JButton("Submit and Read");
 		submit.setActionCommand(cmd_submit);
 		submit.addActionListener(this);
 		
 		
 		add(new JLabel("GFF-File:"), cc.xy(2, 2));
 		add(gffInput, cc.xy(4, 2));
-		add(new JLabel("GFF-Queries:"), cc.xy(6, 2));
-		add(gffQueries, cc.xywh(8, 2, 1, 3));
+		add(gffFileChooser, cc.xy(6, 2));
+		add(new JLabel("GFF-Queries:"), cc.xy(8, 2));
+		add(gffQueries, cc.xywh(10, 2, 1, 3));
 		add(new JLabel("Fasta-File:"), cc.xy(2, 4));
 		add(fastaInput, cc.xy(4, 4));
+		add(fastaFileChooser, cc.xy(6, 4));
 		add(new JSeparator(JSeparator.HORIZONTAL), cc.xyw(2, 6, 7));
 		add(chbxFivePrime, cc.xy(2, 8));
 		add(chbxThreePrime, cc.xy(6, 8));
@@ -90,6 +118,7 @@ public class BSInputPanel extends JPanel implements ActionListener {
 		add(new JSeparator(JSeparator.HORIZONTAL), cc.xyw(2, 14, 7));
 		add(new JLabel("Destination Folder:"), cc.xy(2, 16));
 		add(destination, cc.xy(4, 16));
+		add(destFileChooser, cc.xy(6, 16));
 		add(submit, cc.xy(2, 18));
 		
 	}
@@ -98,23 +127,33 @@ public class BSInputPanel extends JPanel implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		String cmd = e.getActionCommand();
 		if (cmd.equals(cmd_submit)) {
-			storeInput();
+			if (storeInput()) {
+				if (parent.getController().readInput(BSUserSettings.getGffPath(), null, BSUserSettings.getFastaPath(), null, BSUserSettings.getPositionsBeforeFivePrimeSS(), BSUserSettings.getLogoLengthFivePrime())) {
+					System.out.println("reading successful");
+				} else {
+					System.err.println("something went wrong when reading");
+				}
+			}
+		}
+		else if (cmd.equals(cmd_chooseFile)) {
+			BSFileChooser fc = new BSFileChooser(parent);
+			
 		}
 	}
 	
-	private void storeInput() {
+	private boolean storeInput() {
 		// input paths
 		if (gffInput.getText() != null && !gffInput.getText().equals("")) {
 			BSUserSettings.setGffPath(gffInput.getText());
 		} else {
 			JOptionPane.showMessageDialog(this, "The gff-Path is empty!\nEnter a valid path to gff-file!", "Empty path", JOptionPane.ERROR_MESSAGE);
-			return;
+			return false;
 		}
 		if (fastaInput.getText() != null && !fastaInput.getText().equals("")) {
 			BSUserSettings.setFastaPath(fastaInput.getText());
 		} else {
 			JOptionPane.showMessageDialog(this, "The fasta-Path is empty!\nEnter a valid path to fasta-file!", "Empty path", JOptionPane.ERROR_MESSAGE);
-			return;
+			return false;
 		}
 		
 		// gff-queries
@@ -131,7 +170,7 @@ public class BSInputPanel extends JPanel implements ActionListener {
 			BSUserSettings.setAnalyzationType(BSSequenceLogoGenerator.MODE_THREE_PRIME);
 		} else {
 			JOptionPane.showMessageDialog(this, "No analysis mode selected!\nPlease choose an analysis mode!", "No mode selected", JOptionPane.ERROR_MESSAGE);
-			return;
+			return false;
 		}
 		
 		// lengths
@@ -149,6 +188,25 @@ public class BSInputPanel extends JPanel implements ActionListener {
 			BSUserSettings.setOutputpath(destination.getText());
 		} else {
 			BSUserSettings.setOutputpath(gffInput.getText().substring(0, gffInput.getText().lastIndexOf("/")));
+		}
+		return true;
+	}
+	
+	private class BSFileChooser extends JDialog {
+		private JFileChooser fc;
+		public BSFileChooser(JFrame owner) {
+			super(owner);
+			init();
+			pack();
+			setVisible(true);
+		}
+		
+		private void init() {
+			fc = new JFileChooser();
+			FormLayout fl = new FormLayout("pref", "pref");
+			setLayout(fl);
+			CellConstraints cc = new CellConstraints();
+			add(fc, cc.xy(1, 1));
 		}
 	}
 

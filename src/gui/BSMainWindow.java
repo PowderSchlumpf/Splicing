@@ -6,7 +6,6 @@ import gui.panels.BSToolbar;
 
 import java.awt.Dimension;
 
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 
 import com.jgoodies.forms.layout.CellConstraints;
@@ -21,6 +20,7 @@ public class BSMainWindow extends JFrame {
 	
 	public BSMainWindow() {
 		super();
+//		controller = new BSController("yeast", true, false);
 		controller = new BSController(null, true, false);
 		setTitle("SpliceSite Analyzing");
 		setPreferredSize(new Dimension(500, 400));
@@ -34,8 +34,8 @@ public class BSMainWindow extends JFrame {
 		FormLayout layout = new FormLayout("pref","pref,pref");
 		setLayout(layout);
 		CellConstraints cc = new CellConstraints();
-		inputPanel = new BSInputPanel();
-		toolbar = new BSToolbar(controller);
+		inputPanel = new BSInputPanel(this);
+		toolbar = new BSToolbar(this);
 		add(toolbar, cc.xy(1, 1));
 		add(inputPanel, cc.xy(1, 2));
 	}

@@ -1,5 +1,7 @@
 package utils;
 
+import java.util.ArrayList;
+
 public class BSUserSettings {
 	
 	private static String gffPath;
@@ -11,6 +13,8 @@ public class BSUserSettings {
 	private static int logoLengthThreePrime;
 	private static int positionsAfterThreePrimeSS;
 	private static int analyzationType;
+	private static int analysisSequenceSpliceSite;
+	private static ArrayList<Integer> spliceSitePositionList;
 	
 	
 	public static String getGffPath() {
@@ -67,5 +71,19 @@ public class BSUserSettings {
 	public static void setAnalyzationType(int analyzationType) {
 		BSUserSettings.analyzationType = analyzationType;
 	}
+	public static int getAnalysisSequenceSpliceSite() {
+		return analysisSequenceSpliceSite;
+	}
+	public static void setAnalysisSequenceSpliceSite(int analysisSequenceSpliceSite) {
+		BSUserSettings.analysisSequenceSpliceSite = analysisSequenceSpliceSite;
+	}
+	public static ArrayList<Integer> getSpliceSitePositionList() {
+		return spliceSitePositionList;
+	}
+	public static void setSpliceSitePositionList(
+			ArrayList<Integer> spliceSitePositionList) {
+		BSUserSettings.spliceSitePositionList = spliceSitePositionList;
+	}
 
+	
 }

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import dto.BSDTOGFFEntry;
+import dto.BSDTOGFFEntryExon;
 import dto.BSDTOGFFEntryIntron;
 
 public class BSGFFTReader {
@@ -34,7 +35,6 @@ public class BSGFFTReader {
 			String exonGeneid = "";
 			int geneStart = -1;
 			int geneEnd = -1;
-			int exonCount = -1;
 			HashMap<Integer, BSDTOGFFEntry> exons = null;
 			while ((line = br.readLine()) != null) {
 				if (line.startsWith("#")) {
@@ -55,15 +55,21 @@ public class BSGFFTReader {
 					geneStart = Integer.valueOf(fields[BSGFFConstants.START]);
 					geneEnd = Integer.valueOf(fields[BSGFFConstants.END]);
 					exons = new HashMap<>();
-					exonCount = 0;
 				}
 				
 				else if (fields[BSGFFConstants.FEATURE].equals("exon") && fields.length > BSGFFConstants.ATTRIBUTE) {
 					exonGeneid = getGeneId(fields[BSGFFConstants.ATTRIBUTE]);
 					if (exonGeneid.equals(currentGeneid)) {
-						BSDTOGFFEntry exon = createNewEntry(fields, null, null);
-						exonCount++;
-						exons.put(exonCount, exon);
+						BSDTOGFFEntry exon = createNewEntry(fields, null, "exon");
+						((BSDTOGFFEntryExon) exon).setExonNumber(getExonNumber(fields[BSGFFConstants.ATTRIBUTE]));
+						if (exons != null && exons.containsKey(((BSDTOGFFEntryExon) exon).getExonNumber())) {
+							if (gffList == null) {
+								gffList = new ArrayList<>();
+							}
+							gffList.addAll(getIntronsFromExonList(currentGeneid, geneStart, geneEnd, exons));
+							exons = new HashMap<>();
+						}
+						exons.put(((BSDTOGFFEntryExon) exon).getExonNumber(), exon);
 					}
 				}
 			}
@@ -264,7 +270,7 @@ public class BSGFFTReader {
 		intronFields[BSGFFConstants.SEQUENCE] = exon1.getSeqName();
 		intronFields[BSGFFConstants.FEATURE] = "intron";
 		intronFields[BSGFFConstants.START] = String.valueOf(exon1.getEnd()+1);
-		intronFields[BSGFFConstants.END] = String.valueOf(exon2.getStart()-1);
+		intronFields[BSGFFConstants.END] = String.valueOf(exon2.getStart());
 		intronFields[BSGFFConstants.STRAND] = exon1.getStrand();
 		intronFields[BSGFFConstants.FRAME] = ".";
 		intronFields[BSGFFConstants.ATTRIBUTE] = geneid;
@@ -292,7 +298,8 @@ public class BSGFFTReader {
 	}
 	
 	private BSDTOGFFEntry createNewEntry(String[] fields, HashMap<String,String> tempParentEntryList, String feature) {
-		BSDTOGFFEntry gffEntry = feature != null && feature.equals("intron") ? new BSDTOGFFEntryIntron() : new BSDTOGFFEntry();
+		BSDTOGFFEntry gffEntry = feature != null && feature.equals("intron") ? new BSDTOGFFEntryIntron() : 
+			(feature != null && feature.equals("exon") ? new BSDTOGFFEntryExon() : new BSDTOGFFEntry());
 		for (int i = 0; i < fields.length; i++) {
 			if (i == BSGFFConstants.SEQUENCE) {
 				gffEntry.setSeqName(fields[i]);
@@ -381,6 +388,31 @@ public class BSGFFTReader {
 			}
 		}
 		return parentId;
+	}
+	
+	private int getExonNumber(String attributes) {
+		String exonNumber = null;
+		if (attributes.contains(";")) {
+			String[] fields = attributes.split(";");
+			for (int i = 0; i < fields.length; i++) {
+				String field = fields[i].trim();
+				if (field.startsWith("exon_number")) {
+					exonNumber = field.substring(13, field.length()-1);
+					break;
+				}
+			}
+		} else {
+			if (attributes.startsWith("exon_number")) {
+				exonNumber = attributes.substring(13, attributes.length()-1);
+			}
+		}
+		int exonNumb = -1;
+		try {
+			exonNumb = Integer.valueOf(exonNumber);
+		} catch (Exception e) {
+			
+		}
+		return exonNumb;
 	}
 	
 	private boolean isGeneIntron(HashMap<String,String> tempParentEntryList, String[] fields) {
