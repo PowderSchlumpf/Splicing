@@ -1,11 +1,13 @@
 package utils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class BSUserSettings {
 	
 	private static String gffPath;
 	private static String gffQuery;
+	private static String[] gffBiotypes;
 	private static String fastaPath;
 	private static String outputpath;
 	private static int positionsBeforeFivePrimeSS;
@@ -16,6 +18,8 @@ public class BSUserSettings {
 	private static int analysisSequenceSpliceSite;
 	private static ArrayList<Integer> spliceSitePositionList;
 	
+	private static HashMap<Integer, Integer> transcriptsPerGene;
+	private static HashMap<Integer, Integer> intronsPerGene;
 	
 	public static String getGffPath() {
 		return gffPath;
@@ -28,6 +32,12 @@ public class BSUserSettings {
 	}
 	public static void setGffQuery(String gffQuery) {
 		BSUserSettings.gffQuery = gffQuery;
+	}
+	public static String[] getGffBiotypes() {
+		return gffBiotypes;
+	}
+	public static void setGffBiotypes(String[] gffBiotypes) {
+		BSUserSettings.gffBiotypes = gffBiotypes;
 	}
 	public static String getFastaPath() {
 		return fastaPath;
@@ -83,6 +93,19 @@ public class BSUserSettings {
 	public static void setSpliceSitePositionList(
 			ArrayList<Integer> spliceSitePositionList) {
 		BSUserSettings.spliceSitePositionList = spliceSitePositionList;
+	}
+	public static HashMap<Integer, Integer> getTranscriptsPerGene() {
+		return transcriptsPerGene;
+	}
+	public static void setTranscriptsPerGene(
+			HashMap<Integer, Integer> transcriptsPerGene) {
+		BSUserSettings.transcriptsPerGene = transcriptsPerGene;
+	}
+	public static HashMap<Integer, Integer> getIntronsPerGene() {
+		return intronsPerGene;
+	}
+	public static void setIntronsPerGene(HashMap<Integer, Integer> intronsPerGene) {
+		BSUserSettings.intronsPerGene = intronsPerGene;
 	}
 
 	

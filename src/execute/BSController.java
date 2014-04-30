@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import output.BSFileWriter;
+import utils.BSUserSettings;
 import utils.BSUtils;
 import analysis.BSIntronAnalysis;
 import analysis.BSSequenceLogoGenerator;
@@ -107,10 +108,11 @@ public class BSController {
 		boolean successful = false;
 		BSGFFTReader gffr = new BSGFFTReader(fields);
 		if (species == species_human) {
-			gffEntries = gffr.readGFFWithExons(gffPath, onlyGenes, all);
+			gffEntries = gffr.readGFFWithExons(gffPath, onlyGenes, all, false);
 		} else {
 			gffEntries = gffr.readGFF(gffPath, onlyGenes, all);
 		}
+		System.out.println("# gff entries: "+gffEntries.size());
 		successful = true;
 		
 		if (gffDebugPath != null) {
@@ -258,9 +260,16 @@ public class BSController {
 	}
 
 	public void analysePhase() {
-		if (gffEntries != null) {
+		ArrayList<BSDTOGFFEntry> allEntries = null;
+		BSGFFTReader gffr = new BSGFFTReader(fields);
+		if (species == species_human) {
+			allEntries = gffr.readGFFWithExons(BSUserSettings.getGffPath(), onlyGenes, all, true);
+		} else {
+			allEntries = gffr.readGFF(BSUserSettings.getGffPath(), onlyGenes, all);
+		}
+		if (allEntries != null) {
 			System.out.println("Frame Statistics:");
-			int[] frameStat = BSIntronAnalysis.getFrameStatistics(gffEntries);
+			int[] frameStat = BSIntronAnalysis.getFrameStatistics(allEntries);
 			System.out.println("\t0\t1\t2");
 			double count = 0;
 			for (int i = 0; i < frameStat.length; i++) {
@@ -272,6 +281,8 @@ public class BSController {
 				double perc = (int)((frameStat[i]/count)*10000)/100.0;
 				System.out.print("\t"+perc);
 			}
+		} else {
+			System.err.println("Empty GFFs");
 		}
 	}
 	
@@ -429,5 +440,13 @@ public class BSController {
 		} else {
 			System.err.println("oops. something went wrong printing cluster for three prime");
 		}
+	}
+	
+	public void analyseTranscriptsPerGene() {
+		BSFileWriter.printTranscriptsPerGene(BSUserSettings.getOutputpath()+"_transc_per_gene_"+pathEnding);
+	}
+	
+	public void analyseIntronsPerGene() {
+		BSFileWriter.printIntronsPerGene(BSUserSettings.getOutputpath()+"_introns_per_gene_"+pathEnding);
 	}
 }

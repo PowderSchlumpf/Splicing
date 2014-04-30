@@ -23,7 +23,7 @@ public class BSMainWindow extends JFrame {
 //		controller = new BSController("yeast", true, false);
 		controller = new BSController(null, true, false);
 		setTitle("SpliceSite Analyzing");
-		setPreferredSize(new Dimension(500, 400));
+//		setPreferredSize(new Dimension(900, 400));
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		initGui();
 		pack();

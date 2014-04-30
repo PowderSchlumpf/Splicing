@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import utils.BSUserSettings;
 import dto.BSDTOGFFEntry;
 
 public class BSFileWriter {
@@ -214,6 +215,56 @@ public class BSFileWriter {
 			fw.append("## "+ (type == PRINT_FIVE_PRIME ? "FivePrime" : "ThreePrime") + " SpliceSite Clustering\n");
 			for (String ss : ssList) {
 				fw.append(ss+"\n");
+			}
+			success = true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				fw.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return success;
+	}
+	
+	public static boolean printTranscriptsPerGene(String path) {
+		boolean success = false;
+		FileWriter fw = null;
+		try {
+			fw = new FileWriter(new File(path));
+			fw.append("## No of Transcripts per Gene\n## T/G\tfrequency\n");
+			for (Integer transc : BSUserSettings.getTranscriptsPerGene().keySet()) {
+				fw.append(transc+"\t"+BSUserSettings.getTranscriptsPerGene().get(transc)+"\n");
+			}
+			success = true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				fw.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return success;
+	}
+	
+	public static boolean printIntronsPerGene(String path) {
+		boolean success = false;
+		FileWriter fw = null;
+		try {
+			fw = new FileWriter(new File(path));
+			fw.append("## No. of Introns per Gene\n## I/G\tfrequency\n");
+			for (Integer intr : BSUserSettings.getTranscriptsPerGene().keySet()) {
+				fw.append(intr+"\t"+BSUserSettings.getIntronsPerGene().get(intr)+"\n");
 			}
 			success = true;
 		} catch (IOException e) {

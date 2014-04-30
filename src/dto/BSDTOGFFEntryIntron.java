@@ -27,7 +27,8 @@ public class BSDTOGFFEntryIntron extends BSDTOGFFEntry {
 	}
 	public String toString() {
 		return "seqName=" + seqName + ";feature=" + feature + ";start=" + start + ";end=" + end + ";score=" + score
-				+ ";strand=" + strand + ";frame=" + frame + ";attributeID=" + attributeID + ";parentID=" + parentID + ";geneStart=" + geneStart + ";geneEnd="+ geneEnd;
+				+ ";strand=" + strand + ";frame=" + frame + ";attributeID=" + attributeID + ";parentID=" + parentID 
+				+ ";geneStart=" + geneStart + ";geneEnd=" + geneEnd + ";transcriptID=" + transcriptID + ";biotype=" + biotype;
 	}
 
 }

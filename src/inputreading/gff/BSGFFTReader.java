@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import utils.BSUserSettings;
 import dto.BSDTOGFFEntry;
 import dto.BSDTOGFFEntryExon;
 import dto.BSDTOGFFEntryIntron;
@@ -25,8 +26,10 @@ public class BSGFFTReader {
 		}
 	}
 	
-	public ArrayList<BSDTOGFFEntry> readGFFWithExons(String path, boolean onlyGenes, boolean all) {
+	public ArrayList<BSDTOGFFEntry> readGFFWithExons(String path, boolean onlyGenes, boolean all, boolean withDuplicates) {
 		ArrayList<BSDTOGFFEntry> gffList = null;
+		HashMap<Integer, Integer> transcPerGene = new HashMap<>();
+		HashMap<Integer, Integer> intronsPerGene = new HashMap<>();
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new FileReader(new File(path)));
@@ -35,6 +38,8 @@ public class BSGFFTReader {
 			String exonGeneid = "";
 			int geneStart = -1;
 			int geneEnd = -1;
+			int maxNumbOfIntrons = -1;
+			int numbOfTranscripts = 0;
 			HashMap<Integer, BSDTOGFFEntry> exons = null;
 			while ((line = br.readLine()) != null) {
 				if (line.startsWith("#")) {
@@ -50,23 +55,52 @@ public class BSGFFTReader {
 							gffList = new ArrayList<>();
 						}
 						gffList.addAll(getIntronsFromExonList(currentGeneid, geneStart, geneEnd, exons));
+						if (maxNumbOfIntrons < exons.size()-1) {
+							maxNumbOfIntrons = exons.size()-1;
+						}
+						numbOfTranscripts++;
+						if (transcPerGene.containsKey(numbOfTranscripts)) {
+							transcPerGene.put(numbOfTranscripts, (transcPerGene.get(numbOfTranscripts)+1));
+						} else {
+							transcPerGene.put(numbOfTranscripts, 1);
+						}
+						if (maxNumbOfIntrons > 0) {
+							if (intronsPerGene.containsKey(maxNumbOfIntrons)) {
+								intronsPerGene.put(maxNumbOfIntrons, (intronsPerGene.get(maxNumbOfIntrons)+1));
+							} else {
+								intronsPerGene.put(maxNumbOfIntrons, 1);
+							}
+						}
+					}
+					exons = new HashMap<>();
+					numbOfTranscripts = 0;
+					maxNumbOfIntrons = -1;
+					if (!isGeneOfInterest(fields[BSGFFConstants.ATTRIBUTE])) {
+						continue;
 					}
 					currentGeneid = getGeneId(fields[BSGFFConstants.ATTRIBUTE]);
 					geneStart = Integer.valueOf(fields[BSGFFConstants.START]);
 					geneEnd = Integer.valueOf(fields[BSGFFConstants.END]);
-					exons = new HashMap<>();
+					
 				}
 				
 				else if (fields[BSGFFConstants.FEATURE].equals("exon") && fields.length > BSGFFConstants.ATTRIBUTE) {
+					
 					exonGeneid = getGeneId(fields[BSGFFConstants.ATTRIBUTE]);
 					if (exonGeneid.equals(currentGeneid)) {
 						BSDTOGFFEntry exon = createNewEntry(fields, null, "exon");
 						((BSDTOGFFEntryExon) exon).setExonNumber(getExonNumber(fields[BSGFFConstants.ATTRIBUTE]));
+						exon.setTranscriptID(getTranscriptId(fields[BSGFFConstants.ATTRIBUTE]));
+						exon.setBiotype(getBiotype(fields[BSGFFConstants.ATTRIBUTE]));
 						if (exons != null && exons.containsKey(((BSDTOGFFEntryExon) exon).getExonNumber())) {
 							if (gffList == null) {
 								gffList = new ArrayList<>();
 							}
 							gffList.addAll(getIntronsFromExonList(currentGeneid, geneStart, geneEnd, exons));
+							if (maxNumbOfIntrons < exons.size()-1) {
+								maxNumbOfIntrons = exons.size()-1;
+							}
+							numbOfTranscripts++;
 							exons = new HashMap<>();
 						}
 						exons.put(((BSDTOGFFEntryExon) exon).getExonNumber(), exon);
@@ -78,6 +112,22 @@ public class BSGFFTReader {
 					gffList = new ArrayList<>();
 				}
 				gffList.addAll(getIntronsFromExonList(currentGeneid, geneStart, geneEnd, exons));
+				if (maxNumbOfIntrons < exons.size()-1) {
+					maxNumbOfIntrons = exons.size()-1;
+				}
+				numbOfTranscripts++;
+				if (transcPerGene.containsKey(numbOfTranscripts)) {
+					transcPerGene.put(numbOfTranscripts, (transcPerGene.get(numbOfTranscripts)+1));
+				} else {
+					transcPerGene.put(numbOfTranscripts, 1);
+				}
+				if (maxNumbOfIntrons > 0) {
+					if (intronsPerGene.containsKey(maxNumbOfIntrons)) {
+						intronsPerGene.put(maxNumbOfIntrons, (intronsPerGene.get(maxNumbOfIntrons)+1));
+					} else {
+						intronsPerGene.put(maxNumbOfIntrons, 1);
+					}
+				}
 			}
 			
 		} catch (IOException e) {
@@ -92,7 +142,47 @@ public class BSGFFTReader {
 				e.printStackTrace();
 			}
 		}
+		BSUserSettings.setTranscriptsPerGene(transcPerGene);
+		BSUserSettings.setIntronsPerGene(intronsPerGene);
+		System.out.println("gff size with dups: "+gffList.size());
+//		if (gffList != null && !withDuplicates) {
+//			gffList = postprocessGffList(gffList);
+//		}
 		return gffList;
+	}
+	
+	private boolean isGeneOfInterest(String attributes) {
+		if (BSUserSettings.getGffBiotypes() == null || BSUserSettings.getGffBiotypes().length == 0) {
+			return true;
+		} else {
+			String biotype = getBiotype(attributes);
+			for (int i = 0; i < BSUserSettings.getGffBiotypes().length; i++) {
+				if (biotype.equals(BSUserSettings.getGffBiotypes()[i])) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
+	
+	private ArrayList<BSDTOGFFEntry> postprocessGffList(ArrayList<BSDTOGFFEntry> gffList) {
+		ArrayList<BSDTOGFFEntry> uniq = new ArrayList<>();
+		boolean isUniq = true;
+		for (int i = 0; i < gffList.size()-1; i++) {
+			isUniq = true;
+			for (int j = i+1; j < gffList.size(); j++) {
+				if (gffList.get(i).getStart() == gffList.get(j).getStart()) {
+					isUniq = false;
+					break;
+				}
+			}
+			if (isUniq) {
+				uniq.add(gffList.get(i));
+			}
+		}
+		return uniq;
 	}
 
 	public ArrayList<BSDTOGFFEntry> readGFF(String path, boolean onlyGenes, boolean all) {
@@ -230,9 +320,16 @@ public class BSGFFTReader {
 		boolean containsAtt = false;
 		if (attributes.contains(";")) {
 			String[] attr = attributes.split(";");
+			String key = "";
+			String value = "";
 			for (int i = 0; i < attr.length; i++) {
-				String key = attr[i].split("=")[0];
-				String value = attr[i].split("=")[1];
+				if (attr[i].contains("=")) {
+					key = attr[i].split("=")[0].trim();
+					value = attr[i].split("=")[1].trim();
+				} else if (attr[i].trim().contains(" ")) {
+					key = attr[i].trim().split(" ")[0].trim();
+					value = attr[i].trim().split(" ")[1].trim().substring(1, attr[i].split(" ")[1].length()-1);
+				}
 				if (this.attributes.containsKey(key)) {
 					for (String att : this.attributes.get(key)) {
 						if (att.equalsIgnoreCase(value)) {
@@ -278,6 +375,8 @@ public class BSGFFTReader {
 		if (intron instanceof BSDTOGFFEntryIntron) {
 			((BSDTOGFFEntryIntron) intron).setGeneStart(geneStart-1);
 			((BSDTOGFFEntryIntron) intron).setGeneEnd(geneEnd);
+			intron.setTranscriptID(exon1.getTranscriptID());
+			intron.setBiotype(exon1.getBiotype());
 		}
 		return intron;
 	}
@@ -388,6 +487,44 @@ public class BSGFFTReader {
 			}
 		}
 		return parentId;
+	}
+	
+	private String getTranscriptId(String attributes) {
+		String transcriptId = null;
+		if (attributes.contains(";")) {
+			String[] fields = attributes.split(";");
+			for (int i = 0; i < fields.length; i++) {
+				String field = fields[i].trim();
+				if (field.startsWith("transcript_id")) {
+					transcriptId = field.substring(15, field.length()-1);
+					break;
+				}
+			}
+		} else {
+			if (attributes.startsWith("transcript_id")) {
+				transcriptId = attributes.substring(15, attributes.length()-1);
+			}
+		}
+		return transcriptId;
+	}
+	
+	private String getBiotype(String attributes) {
+		String biotype = null;
+		if (attributes.contains(";")) {
+			String[] fields = attributes.split(";");
+			for (int i = 0; i < fields.length; i++) {
+				String field = fields[i].trim();
+				if (field.startsWith("gene_biotype")) {
+					biotype = field.substring(14, field.length()-1);
+					break;
+				}
+			}
+		} else {
+			if (attributes.startsWith("gene_biotype")) {
+				biotype = attributes.substring(14, attributes.length()-1);
+			}
+		}
+		return biotype;
 	}
 	
 	private int getExonNumber(String attributes) {

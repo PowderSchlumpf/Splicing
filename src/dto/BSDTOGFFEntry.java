@@ -10,6 +10,8 @@ public class BSDTOGFFEntry {
 	protected String strand;
 	protected int frame;
 	protected String attributeID;
+	protected String transcriptID;
+	protected String biotype;
 	
 	
 	public String getSeqName() {
@@ -54,16 +56,28 @@ public class BSDTOGFFEntry {
 	public void setFrame(int frame) {
 		this.frame = frame;
 	}
-	
 	public String getAttributeID() {
 		return attributeID;
 	}
 	public void setAttributeID(String attributeID) {
 		this.attributeID = attributeID;
 	}
+	public String getTranscriptID() {
+		return transcriptID;
+	}
+	public void setTranscriptID(String transcriptID) {
+		this.transcriptID = transcriptID;
+	}
+	public String getBiotype() {
+		return biotype;
+	}
+	public void setBiotype(String biotype) {
+		this.biotype = biotype;
+	}
 	public String toString() {
 		return "seqName=" + seqName + ";feature=" + feature + ";start=" + start + ";end=" + end + ";score=" + score
-				+ ";strand=" + strand + ";frame=" + frame + ";attributeID=" + attributeID;
+				+ ";strand=" + strand + ";frame=" + frame + ";attributeID=" + attributeID + ";transcriptID=" + transcriptID
+				+ ";biotype=" + biotype;
 	}
 
 }

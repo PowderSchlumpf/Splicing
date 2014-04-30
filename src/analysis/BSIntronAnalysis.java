@@ -10,7 +10,10 @@ public class BSIntronAnalysis {
 	
 	public static int[] getFrameStatistics(ArrayList<BSDTOGFFEntry> gffEntries) {
 		int[] frameStatistic = new int[3];
+		int count = 0;
 		for (BSDTOGFFEntry intron : gffEntries) {
+			count++;
+			System.err.println(count);
 			if (intron instanceof BSDTOGFFEntryIntron) {
 				int geneStart = 0;
 				int intronStart = 0;
@@ -19,13 +22,15 @@ public class BSIntronAnalysis {
 				if (intron.getStrand().equals("-")) {
 					geneStart = ((BSDTOGFFEntryIntron) intron).getGeneEnd();
 					intronStart = intron.getEnd();
-					posToRej = rejectedIntronPositions(gffEntries, geneStart, intronStart, intron.getSeqName(), ((BSDTOGFFEntryIntron) intron).getParentID(), intron.getStrand());
+					posToRej = rejectedIntronPositions(gffEntries, geneStart, intronStart, intron.getSeqName(), 
+							((BSDTOGFFEntryIntron) intron).getParentID(), ((BSDTOGFFEntryIntron) intron).getTranscriptID(), intron.getStrand());
 					framePos = geneStart - intronStart - posToRej;
 					frameStatistic[framePos%3]++;
 				} else {
 					geneStart = ((BSDTOGFFEntryIntron) intron).getGeneStart();
 					intronStart = intron.getStart();
-					posToRej = rejectedIntronPositions(gffEntries, geneStart, intronStart, intron.getSeqName(), ((BSDTOGFFEntryIntron) intron).getParentID(), intron.getStrand());
+					posToRej = rejectedIntronPositions(gffEntries, geneStart, intronStart, intron.getSeqName(), 
+							((BSDTOGFFEntryIntron) intron).getParentID(), ((BSDTOGFFEntryIntron) intron).getTranscriptID(), intron.getStrand());
 					framePos = (intronStart - geneStart - posToRej);
 					frameStatistic[framePos%3]++;
 				}
@@ -45,12 +50,14 @@ public class BSIntronAnalysis {
 				if (intron.getStrand().equals("-")) {
 					geneStart = ((BSDTOGFFEntryIntron) intron).getGeneEnd();
 					intronStart = intron.getEnd();
-					posToRej = rejectedIntronPositions(gffEntries, geneStart, intronStart, intron.getSeqName(), ((BSDTOGFFEntryIntron) intron).getParentID(), intron.getStrand());
+					posToRej = rejectedIntronPositions(gffEntries, geneStart, intronStart, intron.getSeqName(), 
+							((BSDTOGFFEntryIntron) intron).getParentID(), ((BSDTOGFFEntryIntron) intron).getTranscriptID(), intron.getStrand());
 					framePos = geneStart - intronStart - posToRej;
 				} else {
 					geneStart = ((BSDTOGFFEntryIntron) intron).getGeneStart();
 					intronStart = intron.getStart();
-					posToRej = rejectedIntronPositions(gffEntries, geneStart, intronStart, intron.getSeqName(), ((BSDTOGFFEntryIntron) intron).getParentID(), intron.getStrand());
+					posToRej = rejectedIntronPositions(gffEntries, geneStart, intronStart, intron.getSeqName(), 
+							((BSDTOGFFEntryIntron) intron).getParentID(), ((BSDTOGFFEntryIntron) intron).getTranscriptID(), intron.getStrand());
 					framePos = (intronStart - geneStart - posToRej);
 				}
 				if (framePos%3 == phase) {
@@ -61,11 +68,13 @@ public class BSIntronAnalysis {
 		return entriesForFrame;
 	}
 	
-	private static int rejectedIntronPositions(ArrayList<BSDTOGFFEntry> gffEntries, int geneStart, int intronStart, String seq, String parentId, String strand) {
+	private static int rejectedIntronPositions(ArrayList<BSDTOGFFEntry> gffEntries, int geneStart, int intronStart, String seq, String parentId, 
+			String transcriptId, String strand) {
 		int positionsToReject = 0;
 		ArrayList<String> rejectedPositions = new ArrayList<>();
 		for (BSDTOGFFEntry intron : gffEntries) {
-			if (intron.getSeqName().equals(seq) && ((BSDTOGFFEntryIntron) intron).getParentID().equals(parentId)) {
+			if (intron.getSeqName().equals(seq) && ((BSDTOGFFEntryIntron) intron).getParentID().equals(parentId) && 
+					((BSDTOGFFEntryIntron) intron).getTranscriptID().equals(transcriptId)) {
 				if (strand.equals("-") && intron.getStrand().equals(strand)) {
 					if (((BSDTOGFFEntryIntron) intron).getGeneEnd() == geneStart && intron.getEnd() > intronStart && intron.getStart() > intronStart) {
 						boolean positionAdded = false;

@@ -33,6 +33,7 @@ public class BSInputPanel extends JPanel implements ActionListener {
 	private JTextField gffInput;
 	private JButton gffFileChooser;
 	private JTextArea gffQueries;
+	private JTextArea gffBiotype;
 	private JTextField fastaInput;
 	private JButton fastaFileChooser;
 	private JTextField destination;
@@ -49,13 +50,16 @@ public class BSInputPanel extends JPanel implements ActionListener {
 	private JButton submit;
 	private final String cmd_submit = "cmd_submit";
 	private final String cmd_chooseFile = "cmd_choose";
+	
+	
 	public BSInputPanel(BSMainWindow parent) {
 		this.parent = parent;
 		initGui();
 	}
 	
 	private void initGui() {
-		FormLayout layout = new FormLayout("5dlu,right:pref,5dlu,left:pref,2dlu,left:pref,5dlu,right:pref,5dlu,left:pref:grow,5dlu",
+		FormLayout layout = new FormLayout("5dlu,right:pref,5dlu,left:pref,2dlu,left:pref,5dlu,right:pref,5dlu,left:pref:grow,5dlu,"
+				+ "right:pref,5dlu,left:pref:grow,5dlu",
 				"3dlu,top:pref,3dlu,top:pref:grow,5dlu,pref,3dlu,pref,3dlu,pref,5dlu,pref,3dlu,pref,3dlu,pref,3dlu,pref,3dlu");
 		setLayout(layout);
 		CellConstraints cc = new CellConstraints();
@@ -67,6 +71,8 @@ public class BSInputPanel extends JPanel implements ActionListener {
 		gffFileChooser.addActionListener(this);
 		gffQueries = new JTextArea(5, 10);
 		gffQueries.setBorder(gffInput.getBorder());
+		gffBiotype = new JTextArea(5, 10);
+		gffBiotype.setBorder(gffInput.getBorder());
 		fastaInput = new JTextField(10);
 		fastaFileChooser = new JButton("...");
 		fastaFileChooser.setName("fasta");
@@ -101,10 +107,12 @@ public class BSInputPanel extends JPanel implements ActionListener {
 		add(gffFileChooser, cc.xy(6, 2));
 		add(new JLabel("GFF-Queries:"), cc.xy(8, 2));
 		add(gffQueries, cc.xywh(10, 2, 1, 3));
+		add(new JLabel("GFF-Gene_Biotypes:"), cc.xy(12, 2));
+		add(gffBiotype, cc.xywh(14, 2, 1, 3));		
 		add(new JLabel("Fasta-File:"), cc.xy(2, 4));
 		add(fastaInput, cc.xy(4, 4));
 		add(fastaFileChooser, cc.xy(6, 4));
-		add(new JSeparator(JSeparator.HORIZONTAL), cc.xyw(2, 6, 7));
+		add(new JSeparator(JSeparator.HORIZONTAL), cc.xyw(2, 6, 13));
 		add(chbxFivePrime, cc.xy(2, 8));
 		add(chbxThreePrime, cc.xy(6, 8));
 		add(new JLabel("Positions before 5' SS:"), cc.xy(2, 10));
@@ -115,7 +123,7 @@ public class BSInputPanel extends JPanel implements ActionListener {
 		add(threePrimeLogoLength, cc.xy(8, 10));
 		add(new JLabel("Positions after 3' SS:"), cc.xy(6, 12));
 		add(threePrimePosAfter, cc.xy(8, 12));
-		add(new JSeparator(JSeparator.HORIZONTAL), cc.xyw(2, 14, 7));
+		add(new JSeparator(JSeparator.HORIZONTAL), cc.xyw(2, 14, 13));
 		add(new JLabel("Destination Folder:"), cc.xy(2, 16));
 		add(destination, cc.xy(4, 16));
 		add(destFileChooser, cc.xy(6, 16));
@@ -159,6 +167,14 @@ public class BSInputPanel extends JPanel implements ActionListener {
 		// gff-queries
 		if (gffQueries.getText() != null && !gffQueries.getText().equals("")) {
 			BSUserSettings.setGffQuery(gffQueries.getText());
+		}
+		// gff-biotypes
+		if (gffBiotype.getText() != null && !gffBiotype.getText().equals("")) {
+			if (gffBiotype.getText().contains(";")) {
+				BSUserSettings.setGffBiotypes(gffBiotype.getText().split(";"));	
+			} else {
+				BSUserSettings.setGffBiotypes(new String[]{gffBiotype.getText()});
+			}
 		}
 		
 		// analysis mode
